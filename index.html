@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assert/icon.png" type="image/gif" sizes="16x16">
+    <title>CanvasJS</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script type = "text/javascript" src="index.js"></script>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header text-center">
+            <img src="assert/logo.png" alt="">
+            <br>
+            <h1>Paint App</h1>
+        </div>
+        <canvas id="myCanvas" class="shadow mb-4 main-content mt-4" height= 450
+        width= 1108 style="border:1px solid #000000;">
+            
+        </canvas>
+       <br>
+        <button type="button" class="btn btn-info float-right" onclick="clearfn()">Clear</button>
+    </div>
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext('2d');
+        var x;
+        var y;
+        var bx = canvas.getBoundingClientRect();
+        var startx;
+        var starty;
+        var clickx;
+        var clicky;
+        var drag = false;
+        var move = false;
+        var colours = ['red','green','blue','yellow','purple'];
+        var rectangles = [];
+        var clickedRect={};
+        var count=0;
+        var dbc = false;
+        function clearfn(){
+            context.clearRect(0,0,canvas.width,canvas.height);
+        }
+        function mousedown(e){
+            e.preventDefault();
+            e.stopPropagation();
+            // bx = e.target.getBoundingClientRect();
+            // console.log(bx.left)
+            startx = parseInt(e.clientX - bx.left);
+            starty = parseInt(e.clientY - bx.top);
+            // console.log("down",e);
+            drag = true;  
+            
+        }
+        var index;
+        function mouseUp(e){
+            e.preventDefault();
+            e.stopPropagation();
+            // console.log("up");
+            drag = false;  
+            // move = false;
+            index = Math.floor(Math.random() * (5 - 0)) + 0;
+            context.fillStyle=colours[index]; 
+            if(x != undefined && (x - startx)>0 && (y - starty)>0){
+                const rect = {};
+            rect.startX = startx;
+            rect.startY = starty;
+            rect.lastX = x;
+            rect.lastY = y; 
+            rect.width = x - startx;
+            rect.height = y - starty;
+            rect.id = count;
+            rect.colour = colours[index];
+            count+=1; 
+            // console.log(rect);
+            rectangles.push(rect)
+            // console.log(rectangles.length)
+            }
+            x=undefined;
+            y=undefined;
+            
+        }
+        function mousemove(e){
+            e.preventDefault();
+            e.stopPropagation();
+            // bx = e.target.getBoundingClientRect();
+            x = parseInt(e.clientX - bx.left);
+            y = parseInt(e.clientY - bx.top);
+            // console.log(bx.left)
+            if(!drag)
+            {
+                return;
+            }
+            else{
+                var width=x-startx;
+                var height=y-starty;              
+                context.beginPath();
+                context.rect(startx,starty,width,height);
+                context.fill();
+            }
+
+            
+        }
+        var selected;
+        var rearr=[];
+        
+        function Onclick(e){
+            e.preventDefault();
+            e.stopPropagation();
+            move=false;
+            var data = new Set(rectangles);
+            rearr = [...data];
+            var rec = canvas.getBoundingClientRect(),
+            clickx = e.clientX - rec.left,
+            clicky = e.clientY - rec.top,
+            i = 0, rectt;
+            while(rectt = rearr[i++]){
+                context.beginPath();
+                context.rect(rectt.startX,rectt.startY,rectt.width,rectt.height);
+                if (context.isPointInPath(clickx, clicky)) {
+                    selected = rectt.id;
+                    move =true;
+                    canvas.addEventListener('click',mousedrag)
+                    break;
+                }
+                else{
+                    
+                }
+                
+            }
+        }
+       
+        function mousedrag(e){
+            
+            e.preventDefault();
+            e.stopPropagation();
+            // bx = e.target.getBoundingClientRect();
+            movex = parseInt(e.clientX - bx.left);
+            movey = parseInt(e.clientY - bx.top);
+            // console.log(movex,movey,move)
+            if(move){
+                var img = context.getImageData(rearr[selected].startX,rearr[selected].startY,rearr[selected].width,rearr[selected].height)
+                context.clearRect(rearr[selected].startX,rearr[selected].startY,rearr[selected].width,rearr[selected].height);
+                context.putImageData(img, movex,movey);
+                move = false;
+                rectangles[selected].startX = rearr[selected].startX= movex;
+                rectangles[selected].startY = rearr[selected].startY = movey;
+            }
+        }
+
+        function dblclick(e){
+            e.preventDefault();
+            e.stopPropagation();
+            dbc = true;
+            var data = new Set(rectangles);
+            rearr = [...data];
+            var rec = canvas.getBoundingClientRect(),
+            clickx = e.clientX - rec.left,
+            clicky = e.clientY - rec.top,
+            i = 0, rectt;
+            while(rectt = rearr[i++]){
+                context.beginPath();
+                context.rect(rectt.startX,rectt.startY,rectt.width,rectt.height);
+                if (context.isPointInPath(clickx, clicky)) {
+                    context.clearRect(rectt.startX,rectt.startY,rectt.width,rectt.height);
+                    rearr.pop(rectt);
+                    rectangles.pop(rectt);
+                    break;
+                }
+                
+            }
+        }
+        var click=0;
+        canvas.addEventListener('mousedown', mousedown);
+        canvas.addEventListener("mousemove", mousemove);
+        canvas.addEventListener("mouseup", mouseUp);
+        canvas.addEventListener("click",function(event) {
+            click++;
+            if (click === 1) {
+                singleClickTimer = setTimeout(function() {
+                    click = 0;
+                    Onclick(event);
+                }, 400);
+            } else if (click === 2) {
+                clearTimeout(singleClickTimer);
+                click = 0;
+                dblclick(event);
+            }
+        }, false);
+        // canvas.addEventListener("dblclick",dblclick)
+        canvas.addEventListener("drag",mousedrag)
+        
+    </script>
+</body>
+</html>
