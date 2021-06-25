@@ -14,3 +14,5 @@ Paint App instructions
     the rectangle click on the rectangle you want to move and click on the place you want to move .
 3. To delete 
     a rectangle double click on the rectangle you want to delete.
+
+Demo : https://dhaaranicit.github.io/CanvasJs/
